@@ -12,7 +12,12 @@ end class
 
 const FIELD_WIDTH: int :: 800
 const FIELD_HEIGHT: int :: 500
-const PLAYER_X: int :: 30
+const PLAYER_XPOS: int :: 30
+const PLAYER_WIDTH: float :: 10.0
+const PLAYER_HEIGHT: float :: 100.0
+const PLAYER_MAXVELO: float :: 3.0
+const PLAYER_ACCEL: float :: 0.2
+const BALL_RADIUS: float :: 10.0
 var wndMain: wnd@Wnd
 var state: @Stat
 var player1: @Pos
@@ -20,11 +25,11 @@ var player2: @Pos
 var ball: @Pos
 
 func initGame()
-	do @player1.x :: @PLAYER_X $ float
+	do @player1.x :: @PLAYER_XPOS $ float
 	do @player1.y :: (@FIELD_HEIGHT / 2) $ float
 	do @player1.veloX :: 0.0
 	do @player1.veloY :: 0.0
-	do @player2.x :: (@FIELD_WIDTH-@PLAYER_X) $ float
+	do @player2.x :: (@FIELD_WIDTH-@PLAYER_XPOS) $ float
 	do @player2.y :: (@FIELD_HEIGHT / 2) $ float
 	do @player2.veloX :: 0.0
 	do @player2.veloY :: 0.0
@@ -62,33 +67,35 @@ end func
 func drawWindow()
 	;var text: draw@Font :: draw@makeFont(null, 15, false, false, true, 0.0)
 	;do text.draw(0.0, 0.0, "player1.veloY : \{@player1.veloY}", 16#FFFFFFFF)
-	do draw@rect(@player1.x, @player1.y-50.0, 10.0, 100.0, 16#FFF44336)
-	do draw@rect(@player2.x, @player2.y-50.0, 10.0, 100.0, 16#FF2196F3)
-	do draw@circle(@ball.x, @ball.y, 10.0, 10.0, 16#FFFFFFFF)
+	do draw@rect(@player1.x, @player1.y-(@PLAYER_HEIGHT/2.0),
+	|				@PLAYER_WIDTH, @PLAYER_HEIGHT, 16#FFF44336)
+	do draw@rect(@player2.x-@PLAYER_WIDTH, @player2.y-(@PLAYER_HEIGHT/2.0),
+	|				@PLAYER_WIDTH, @PLAYER_HEIGHT, 16#FF2196F3)
+	do draw@circle(@ball.x, @ball.y, @BALL_RADIUS, @BALL_RADIUS, 16#FFFFFFFF)
 end func
 
 func moveObjects() 
-	if (wnd@key(%w) & !wnd@key(%s) & @player1.veloY >= -2.9)
-		do @player1.veloY :+ -0.2
-	elif (wnd@key(%s) & !wnd@key(%w) & @player1.veloY <= 2.9)
-		do @player1.veloY :+ 0.2
-	elif (@player1.veloY >= 0.1)
-		do @player1.veloY :+ -0.2
-	elif (@player1.veloY <= -0.1)
-		do @player1.veloY :+ 0.2
+	if (wnd@key(%w) & !wnd@key(%s) & @player1.veloY >= -@PLAYER_MAXVELO)
+		do @player1.veloY :+ -@PLAYER_ACCEL
+	elif (wnd@key(%s) & !wnd@key(%w) & @player1.veloY <= @PLAYER_MAXVELO)
+		do @player1.veloY :+ @PLAYER_ACCEL
+	elif (@player1.veloY >= 0.01)
+		do @player1.veloY :+ -@PLAYER_ACCEL
+	elif (@player1.veloY <= -0.01)
+		do @player1.veloY :+ @PLAYER_ACCEL
 	else
 		do @player1.veloY :+ 0.0
 	end if
 	
-	if (wnd@key(%up) & !wnd@key(%down) & @player2.veloY >= -2.9)
-		do @player2.veloY :+ -0.2
-	elif (wnd@key(%down) & !wnd@key(%up) & @player2.veloY <= 2.9)
-		do @player2.veloY :+ 0.2
-	elif (@player2.veloY >= 0.1)
-		do @player2.veloY :+ -0.2
-	elif (@player2.veloY <= -0.1)
-		do @player2.veloY :+ 0.2
-	end if	
+	if (wnd@key(%up) & !wnd@key(%down) & @player2.veloY >= -@PLAYER_MAXVELO)
+		do @player2.veloY :+ -@PLAYER_ACCEL
+	elif (wnd@key(%down) & !wnd@key(%up) & @player2.veloY <= @PLAYER_MAXVELO)
+		do @player2.veloY :+ @PLAYER_ACCEL
+	elif (@player2.veloY >= 0.01)
+		do @player2.veloY :+ -@PLAYER_ACCEL
+	elif (@player2.veloY <= -0.01)
+		do @player2.veloY :+ @PLAYER_ACCEL
+	end if
 	
 	do @player1.y :+ @player1.veloY
 	do @player2.y :+ @player2.veloY
