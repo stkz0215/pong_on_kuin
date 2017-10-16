@@ -1,0 +1,119 @@
+enum Stat
+	ready
+	play
+end enum
+
+class Pos()
+	+var x: float
+	+var y: float
+	+var veloX: float
+	+var veloY: float
+end class
+
+const FIELD_WIDTH: int :: 800
+const FIELD_HEIGHT: int :: 500
+const PLAYER_X: int :: 30
+var wndMain: wnd@Wnd
+var state: @Stat
+var player1: @Pos
+var player2: @Pos
+var ball: @Pos
+
+func initGame()
+	do @player1.x :: @PLAYER_X $ float
+	do @player1.y :: (@FIELD_HEIGHT / 2) $ float
+	do @player1.veloX :: 0.0
+	do @player1.veloY :: 0.0
+	do @player2.x :: (@FIELD_WIDTH-@PLAYER_X) $ float
+	do @player2.y :: (@FIELD_HEIGHT / 2) $ float
+	do @player2.veloX :: 0.0
+	do @player2.veloY :: 0.0
+	do @ball.x :: (@FIELD_WIDTH / 2) $ float
+	do @ball.y :: (@FIELD_HEIGHT / 2) $ float
+	do @ball.veloX :: 0.0
+	do @ball.veloY :: 0.0
+end func
+
+func readyGame()
+	do @initGame()
+	do @drawWindow()
+	if (wnd@key(%space))
+		var initveloX: int :: lib@rnd(-1, 1)
+		var initveloY: int :: lib@rnd(-2, 2)
+		while (initveloX = 0 | initveloY = 0)
+			do initveloX :: lib@rnd(-1, 1)
+			do initveloY :: lib@rnd(-2, 2)
+		end while
+		do @ball.veloX :: initveloX$float * 2.0
+		do @ball.veloY :: initveloY$float
+		do @state :: %play
+	end if
+end func
+
+func playGame()
+	do @moveObjects()
+	do @drawWindow()
+	
+	if (wnd@key(%esc))
+		do @state :: %ready
+	end if
+end func
+
+func drawWindow()
+	;var text: draw@Font :: draw@makeFont(null, 15, false, false, true, 0.0)
+	;do text.draw(0.0, 0.0, "player1.veloY : \{@player1.veloY}", 16#FFFFFFFF)
+	do draw@rect(@player1.x, @player1.y-50.0, 10.0, 100.0, 16#FFF44336)
+	do draw@rect(@player2.x, @player2.y-50.0, 10.0, 100.0, 16#FF2196F3)
+	do draw@circle(@ball.x, @ball.y, 10.0, 10.0, 16#FFFFFFFF)
+end func
+
+func moveObjects() 
+	if (wnd@key(%w) & !wnd@key(%s) & @player1.veloY >= -2.9)
+		do @player1.veloY :+ -0.2
+	elif (wnd@key(%s) & !wnd@key(%w) & @player1.veloY <= 2.9)
+		do @player1.veloY :+ 0.2
+	elif (@player1.veloY >= 0.1)
+		do @player1.veloY :+ -0.2
+	elif (@player1.veloY <= -0.1)
+		do @player1.veloY :+ 0.2
+	else
+		do @player1.veloY :+ 0.0
+	end if
+	
+	if (wnd@key(%up) & !wnd@key(%down) & @player2.veloY >= -2.9)
+		do @player2.veloY :+ -0.2
+	elif (wnd@key(%down) & !wnd@key(%up) & @player2.veloY <= 2.9)
+		do @player2.veloY :+ 0.2
+	elif (@player2.veloY >= 0.1)
+		do @player2.veloY :+ -0.2
+	elif (@player2.veloY <= -0.1)
+		do @player2.veloY :+ 0.2
+	end if	
+	
+	do @player1.y :+ @player1.veloY
+	do @player2.y :+ @player2.veloY
+	do @ball.x :+ @ball.veloX
+	do @ball.y :+ @ball.veloY
+end func
+
+func main()
+	do @wndMain :: wnd@makeWnd(null, %aspect, @FIELD_WIDTH, @FIELD_HEIGHT, "Tytle")
+	do wnd@makeDraw(@wndMain, 0, 0, @FIELD_WIDTH, @FIELD_HEIGHT, %scale, %scale, false)
+	do draw@clearColor(16#FF9E9E9E)
+	do @state :: %ready
+	do @player1 :: #@Pos
+	do @player2 :: #@Pos
+	do @ball :: #@Pos
+	
+	do @initGame()
+	while(wnd@act())
+		switch(@state)
+		case %ready
+			do @readyGame()
+		case %play
+			do @playGame()
+		end switch
+		
+		do draw@render(60)
+	end while
+end func
